@@ -1,0 +1,178 @@
+On your desktop machine
+
+Set your environment variables to an installed JDK7 and Apache Ant. Note JDK8 can’t (yet) be used for compiling Lwjgl:
+
+export PATH=~/tools/jdk1.7.0_17/bin:$PATH
+export PATH=~/tools/apache-ant-1.8.3/bin:$PATH
+export JAVA_HOME=~/tools/jdk1.7.0_17/
+
+Create a base directory for your work,
+
+mkdir ~/libgdx-pi
+cd ~/libgdx-pi
+
+Get the source code for the development version of libgdx (as of 10th June 2013) from GitHub:
+
+git clone https://github.com/libgdx/libgdx.git
+
+Fetch the latest pre-built binaries from LibGdx’s build servers (saves us from building everything from scratch):
+
+cd libgdx
+ant -f fetch.xml
+
+Get the source code for the development version of lwjgl (as of 10th June 2013):
+
+cd ~/libgdx-pi
+git clone https://github.com/LWJGL/lwjgl.git
+
+Patch support for initialising the for Raspberry Pi OpenGLES in Lwjgl. Note these changes are based on the excellent work by spsn (https://github.com/spsn/lwjgl) with additional changes to support libGDX available here:
+
+org.lwjgl.opengl.DrawableGLES.java (1 place, Search for ChrisH)
+
+Patch support to initialise the GLES context from LIbGDX:
+
+org.lwjgl.opengles.GLContext.java (1 place, Search for ChrisH)
+
+Build the Lwjgl jars (including the OpenGLES jars) and update the references in LibGDX:
+
+cd ~/libgdx-pi/libgdx/backends/gdx-openal/libs
+mv lwjgl.jar lwjgl.jar.old
+mv lwjgl-debug.jar lwjgl-debug.jar.old<
+cd ~/libgdx-pi/lwjgl/
+ant jars
+cp libs/lwjgl.jar ~/libgdx-pi/libgdx/backends/gdx-openal/libs/.
+ant jars_es
+cp libs/lwjgl.jar ~/libgdx-pi/libgdx/backends/gdx-openal/libs/lwjgl_es.jar
+
+Patch libGDX/backends/gdx-backend-lwjgl to use the Lwjgl’s OpenGLES20 (instead of OpenGL):
+
+com.badlogic.gdx.backends.lwjgl.LwjglGraphics.java: (2 places, Search for ChrisH)
+
+Add new class com.badlogic.gdx.backends.lwjgl.LwjglGLES20.java
+
+cd ~/libgdx-pi/libgdx
+ant gdx-backend-lwjgl
+
+This version of LibGDX is still usable on the Desktop (using OpenGL). If we specify -DLWJGJ_BACKEND=GLES we can toggle to the Lwjgl’s OpenGLES code for use on the Raspberry Pi. I couldn’t get OpenGLES working on my Desktop Linux machine, but it works OK on the Pi.
+
+Patch Lwjgl’s native code to work with the Raspberry Pi’s OpenGLES:
+
+lwjgl/src/native/common/opengles/org_lwjgl_opengles_EGL.c (3 places, Search for ChrisH)
+
+lwjgl/src/native/common/opengles/org_lwjgl_opengles_CallbackUtil.c (1 place, Search for ChrisH)
+
+Now copy the Lwjgl project to the Pi and compile the native code:
+
+scp -r lwjgl pi@raspberrypi:~/.
+
+On the Pi:
+
+Install ant:
+
+ssh pi@raspberrypi
+sudo apt-get install ant
+
+We need to build Lwjgl using jdk7:
+
+export PATH=/usr/lib/jvm/java-1.7.0-openjdk-armhf/bin/:$PATH
+export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-armhf
+cd lwjgl
+
+Update build.xml and remove reference to eclipse-update
+
+Update paths in platform_build/linux_ant/build.xml:
+
+  <property name="libs32" value="-L/usr/X11R6/lib -L/usr/X11/lib -lm -lX11 -lXext -lXcursor -lXrandr 
+-lXxf86vm -lpthread -L${java.home}/lib/i386 -ljawt -lGLESv2 -L/opt/vc/lib 
+-L/usr/lib/jvm/java-7-openjdk-armhf/jre/lib/arm" />
+
+Update paths in platform_build/linux_ant/build_es.xml:
+
+  <property name="libs32" value="-L/home/spasi/lwjgl/libs/linux -lEGL -L/usr/X11R6/lib -L/usr/X11/lib 
+-lm -lX11 -lXext -lXcursor -lXrandr -lpthread -L${java.home}/lib/i386 -ljawt -lGLESv2 -L/opt/vc/lib 
+-L/usr/lib/jvm/java-1.7.0-openjdk-armhf/jre/lib/arm/ -lEGL" />
+
+Install xorg dev libraries:
+
+apt-get install xorg-dev
+
+Add /opt/vc symlinks
+
+cd /opt/vc/include/interface/vcos 
+ln -s /opt/vc/include/interface/vcos/pthreads/vcos_futex_mutex.h .
+ln -s /opt/vc/include/interface/vcos/pthreads/vcos_platform.h .
+ln -s /opt/vc/include/interface/vcos/pthreads/vcos_platform_types.h .
+cd /opt/vc/include/EGL
+ln -s /opt/vc/include/bcm_host.h .
+
+Add lwjgl -> /opt/vc symlinks
+
+cd ~/lwjgl/src/native/common
+mv EGL EGL.ORIG
+mv GLES2 GLES2.ORIG
+mv KHR KHR.ORIG
+ln -s /opt/vc/include/EGL .
+ln -s /opt/vc/include/GLES2 .
+ln -s /opt/vc/include/IL .
+ln -s /opt/vc/include/interface .
+ln -s /opt/vc/include/KHR .
+ln -s /opt/vc/include/vcinclude .
+ln -s /opt/vc/include/VG .
+
+Compile Lwjgl:
+
+cd ~/lwjgl
+ant
+ant compile_native_es
+
+Install openal on the Pi:
+
+sudo apt-get install libopenal1
+
+This installs a library: /usr/lib/arm-linux-gnueabihf/libopenal.so.1
+
+Next create release directory on the Pi:
+
+mkdir ~/gdx-test
+
+Copy binaries:
+
+cp /usr/lib/arm-linux-gnueabihf/libopenal.so.1 ~/gdx-test/libopenal.so
+cp ~/lwjgl/libs/linux/liblwjgl.so ~/gdx-test/.
+
+Copy over the libGDX libraries from your Desktop machine:
+
+scp ~/libgdx-pi/libgdx/dist/gdx.jar pi@raspberrypi:~/gdx-test/.
+scp ~/libgdx-pi/libgdx/dist/gdx-openal.jar pi@raspberrypi:~/gdx-test/.
+scp ~/libgdx-pi/libgdx/dist/gdx-backend-lwjgl.jar pi@raspberrypi:~/gdx-test/.
+
+compile libGDX natives for Arm (based on noxo’s work - http://forum.jogamp.org/JOGL-2-0-OpenGL-OpenGL-ES-backend-for-LibGDX-td4027689.html):
+
+scp -r libgdx-pi/libgdx pi@raspberrypi:~
+ssh pi@raspberrypi
+cd libgdx/gdx/jni
+
+edit build-linux32.xml
+remove -m32 and -msse and -mfpmath=sse flags
+
+ant -f build-linux32.xml
+cp ~/libgdx/gdx/libs/linux32/libgdx.so ~/gdx-test/.
+
+Build and copy over the gdx-invaders example:
+
+Import the libGDX projects into Eclipse (following information here) and export the gdx-invaders project as a jar.
+
+scp gdx-invaders.jar pi@raspberrypi:~/gdx-test/.
+
+Install JDK8 beta on the Pi:
+
+wget http://www.java.net/download/JavaFXarm/jdk-8-ea-b36e-linux-arm-hflt-29_nov_2012.tar.gz
+
+You can use the openjdk vm but it is not as fast as jdk8 and gdx-invaders is noticeably slower.
+
+Then create a launcher script:
+
+export PATH=/opt/jdk1.8.0/bin:$PATH
+export JAVA_HOME=/opt/jdk1.8.0
+java -Xmx128M -DPI=true -DLWJGJ_BACKEND=GLES -Djava.library.path=libs:/opt/vc/lib:. 
+-classpath *:. com.badlogic.gdxinvaders.GdxInvadersDesktop $1
