@@ -38,9 +38,8 @@
 #include "extgl_egl.h"
 
 //ChrisH : Lwjgl OpenGLES support (for Raspberry Pi):
-#include "EGL/eglext.h"
-#include "EGL/egl.h"
-#include "EGL/bcm_host.h"
+#include "interface/vmcs_host/vc_dispmanx_types.h"
+#include "interface/vctypes/vc_image_types.h"
 
 JNIEXPORT jint JNICALL Java_org_lwjgl_opengles_EGL_eglGetError(JNIEnv *env, jclass clazz) {
     return eglGetError();
