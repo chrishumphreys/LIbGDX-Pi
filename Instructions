@@ -60,7 +60,7 @@ This version of LibGDX is still usable on the Desktop (using OpenGL). If we spec
 
 Patch Lwjgl’s native code to work with the Raspberry Pi’s OpenGLES:
 
-lwjgl/src/native/common/opengles/org_lwjgl_opengles_EGL.c (4 places, Search for ChrisH)
+lwjgl/src/native/common/opengles/org_lwjgl_opengles_EGL.c (3 places, Search for ChrisH)
 
 lwjgl/src/native/common/opengles/org_lwjgl_opengles_CallbackUtil.c (1 place, Search for ChrisH)
 
