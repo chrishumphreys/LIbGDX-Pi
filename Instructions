@@ -1,3 +1,6 @@
+Updated 1st Oct 2013 - instructions now work with 2013 versions of Raspbian.
+Note: Versions of Raspbian later than 2012-10-28-wheezy-raspbian have older opengl header files in /opt/vc/include which required updates to the instructions below.
+
 On your desktop machine
 
 Set your environment variables to an installed JDK7 and Apache Ant. Note JDK8 can’t (yet) be used for compiling Lwjgl:
@@ -57,7 +60,7 @@ This version of LibGDX is still usable on the Desktop (using OpenGL). If we spec
 
 Patch Lwjgl’s native code to work with the Raspberry Pi’s OpenGLES:
 
-lwjgl/src/native/common/opengles/org_lwjgl_opengles_EGL.c (3 places, Search for ChrisH)
+lwjgl/src/native/common/opengles/org_lwjgl_opengles_EGL.c (4 places, Search for ChrisH)
 
 lwjgl/src/native/common/opengles/org_lwjgl_opengles_CallbackUtil.c (1 place, Search for ChrisH)
 
@@ -111,19 +114,21 @@ cd ~/lwjgl/src/native/common
 mv EGL EGL.ORIG
 mv GLES2 GLES2.ORIG
 mv KHR KHR.ORIG
-ln -s /opt/vc/include/EGL .
-ln -s /opt/vc/include/GLES2 .
 ln -s /opt/vc/include/IL .
 ln -s /opt/vc/include/interface .
-ln -s /opt/vc/include/KHR .
 ln -s /opt/vc/include/vcinclude .
 ln -s /opt/vc/include/VG .
+
+cd EGL
+ln -s /opt/vc/include/EGL/eglplatform.h .
 
 Compile Lwjgl:
 
 cd ~/lwjgl
 ant
 ant compile_native_es
+
+Note: You will get quite a lot of warnings.
 
 Install openal on the Pi:
 
