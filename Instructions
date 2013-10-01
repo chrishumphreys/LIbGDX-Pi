@@ -118,6 +118,7 @@ ln -s /opt/vc/include/vcinclude .
 ln -s /opt/vc/include/VG .
 
 cd EGL
+mv eglplatform.h egl platform.h.old
 ln -s /opt/vc/include/EGL/eglplatform.h .
 
 Compile Lwjgl:
