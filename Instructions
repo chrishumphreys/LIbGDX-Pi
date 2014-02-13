@@ -1,3 +1,5 @@
+Updated 11th Feb 2014 - instructions for latest Libgdx and lwjgl.
+
 Updated 1st Oct 2013 - instructions now work with 2013 versions of Raspbian.
 Note: Versions of Raspbian later than 2012-10-28-wheezy-raspbian have older opengl header files in /opt/vc/include which 
 required updates to the instructions below.
@@ -160,7 +162,7 @@ edit build-linux32.xml
 remove -m32 and -msse and -mfpmath=sse flags
 
 ant -f build-linux32.xml
-cp ~/libgdx/gdx/libs/linux32/libgdx.so ~/gdx-test/.
+cp ~/libgdx/gdx/libs/linux32/libgdx.so ~/gdx-test/libgdxarm.so
 
 Build and copy over the gdx-invaders example:
 

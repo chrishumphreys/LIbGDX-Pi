@@ -62,6 +62,7 @@ import static org.lwjgl.opengles.GLES20.*;
  *          $Id: GLContext.java 3279 2010-03-11 21:06:49Z spasi $
  */
 
+
 //ChrisH : Patched for Lwjgl OpenGLES support (for Raspberry Pi)
 
 public final class GLContext {
@@ -271,8 +272,9 @@ public final class GLContext {
 				 * a capabilities object has been set.
 				 */
 				new ContextCapabilities();
+
 				//ChrisH : Lwjgl OpenGLES support (for Raspberry Pi):
-		    	        org.lwjgl.opengles.StateTracker.getTracker().init();
+				org.lwjgl.opengles.StateTracker.getTracker().init();
 
 				capability_cache.put(context, getCapabilities());
 			} else
